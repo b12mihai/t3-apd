@@ -9,11 +9,11 @@ TARGET = tema3
 $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
-serial: $(SERIAL)
-	gcc $(CFLAGS) -o $@ $(SERIAL) $(LIBS)
+serial: serial.c
+	gcc $(CFLAGS) -o $@ serial.c complex.c util.c $(LIBS)
 
 clean:
-	rm -f $(OBJECTS) $(TARGET) a.out *.pgm
+	rm -f $(OBJECTS) $(TARGET) a.out *.pgm serial
 script:
 	./script_test.sh
 

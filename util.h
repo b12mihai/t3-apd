@@ -1,7 +1,4 @@
-#pragma once
-
 #define NUM_COLORS 256
-#define DATA_TAG 1  /* "data" message (worker to master) */
 
 typedef struct _input {
 	int tip_multime;
@@ -16,4 +13,4 @@ typedef struct _input {
 } Input;
 
 Input parse_input_file(char* filename);
-void plot_pgm(char* filename, int width, int height, char **colors);
+void plot_pgm(char* filename, int width, int height, int **colors);

@@ -28,7 +28,7 @@ Input parse_input_file(char* filename)
 	return data;
 }
 
-void plot_pgm(char* filename, int width, int height, char **colors)
+void plot_pgm(char* filename, int width, int height, int **colors)
 {
 	FILE *f;
 	f = fopen(filename, "w");
