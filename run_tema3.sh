@@ -1,9 +1,9 @@
 #!/bin/bash
 
-make serial
-exec=serial
+make
+exec=tema3
 
-echo -e "Testing SERIAL Mandelbrot: \n"
+echo -e "$exec Testing Mandelbrot: \n"
 
 for i in 1 2 3 4
 do
@@ -15,7 +15,7 @@ do
 	test/imgdiff $original $file_out
 done
 
-echo -e "Testing SERIAL Julia: \n"
+echo -e "Testing Julia: \n"
 for i in 1 2 3 4 5 6
 do
 	echo -e "Test $i : "
