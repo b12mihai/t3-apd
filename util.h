@@ -1,3 +1,5 @@
+#pragma once
+
 #define NUM_COLORS 256
 
 typedef struct _input {
