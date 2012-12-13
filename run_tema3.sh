@@ -2,6 +2,7 @@
 
 make
 exec=tema3
+num_procs=$1
 
 echo -e "$exec Testing Mandelbrot: \n"
 
@@ -11,7 +12,7 @@ do
 	file_in="test/mandelbrot${i}.in"
 	file_out="mandel${i}.pgm"
 	original="test/mandelbrot${i}.pgm"
-	./$exec $file_in $file_out
+	mpirun -np $num_procs $exec $file_in $file_out
 	test/imgdiff $original $file_out
 done
 
@@ -22,6 +23,6 @@ do
 	file_in="test/julia${i}.in"
 	file_out="jul${i}.pgm"
 	original="test/julia${i}.pgm"
-	./$exec $file_in $file_out
+	mpirun -np $num_procs $exec $file_in $file_out
 	test/imgdiff $original $file_out
 done

@@ -13,7 +13,6 @@
 #define DATA_TAG    2           /* "data" message (worker to master) */
 #define START_LNG   2
 
-
 int master(int nworkers, int width, int height, Input in, char* file_out)
 {
 	MPI_Status status;
@@ -81,22 +80,44 @@ int slave(int myID, int width, int height, Input in)
     int row, col, step = 0;
     complex_t z,c;
     double u,v;
-    for(row = first_row; row < (first_row + rows); ++row) {
-    	data_msg[0] = row;
-    	for(col = 0; col < width; ++col) {
-			z = new_zero_complex();
-			step = 0;
-			u = in.x_min + col * in.rezolutie;
-			v = in.y_min + row * in.rezolutie;
-			c = new_complex(u,v);
-			while(modul(z) < 2 && step < in.max_steps) {			
-				z = add(mult(z, z), c);
-				step++;
+    
+    if(in.tip_multime == 0) { // Mandelbrot set   
+		for(row = first_row; row < (first_row + rows); ++row) {
+			data_msg[0] = row;
+			for(col = 0; col < width; ++col) {
+				z = new_zero_complex();
+				step = 0;
+				u = in.x_min + col * in.rezolutie;
+				v = in.y_min + row * in.rezolutie;
+				c = new_complex(u,v);
+				while(modul(z) < 2 && step < in.max_steps) {			
+					z = add(mult(z, z), c);
+					step++;
+				}
+				data_msg[col + 1] = step % NUM_COLORS;
 			}
-			data_msg[col + 1] = step % NUM_COLORS;
-    	}
-    	MPI_Send(data_msg, width+1, MPI_LONG, 0, DATA_TAG, MPI_COMM_WORLD);
-    }
+			MPI_Send(data_msg, width+1, MPI_LONG, 0, DATA_TAG, MPI_COMM_WORLD);
+		}
+	} else if(in.tip_multime == 1) { //Julia
+		z = new_zero_complex();
+		c = new_complex(in.julia_param1, in.julia_param2);
+		row = col = step = 0;
+		for(row = first_row; row < (first_row + rows); ++row) {
+			data_msg[0] = row;
+			for(col = 0; col < width; ++col) {
+				step = 0;
+				u = in.x_min + col * in.rezolutie;
+				v = in.y_min + row * in.rezolutie;
+				z = new_complex(u,v);
+				while(modul(z) < 2 && step < in.max_steps) {			
+					z = add(mult(z, z), c);
+					step++;
+				}
+				data_msg[col + 1] = step % NUM_COLORS;
+			}
+			MPI_Send(data_msg, width+1, MPI_LONG, 0, DATA_TAG, MPI_COMM_WORLD);
+		}
+	}
     
 	return EXIT_SUCCESS;
 }
