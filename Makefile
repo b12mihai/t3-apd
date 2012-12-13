@@ -14,8 +14,6 @@ serial: $(SERIAL)
 
 clean:
 	rm -f *.o $(TARGET) a.out *.pgm serial
-script:
-	./script_test.sh
 
 archive:
-	zip 331CA_BarbulescuMihai_Tema3APD.zip *.c *.h Makefile README 	test/*
+	zip 331CA_BarbulescuMihai_Tema3APD.zip *.c *.h *.sh Makefile README	test/*

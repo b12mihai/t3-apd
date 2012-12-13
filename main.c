@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 	
 	if(myid == 0) {
 		rc = master(nprocs - 1, width, height, in, argv[2]);
-		printf("Cred ca a mers \n");
+		//printf("Cred ca a mers \n");
 	} else {
 		rc = slave(myid, width, height, in);
 	}
