@@ -63,7 +63,7 @@ int master(int nworkers, int width, int height, Input in, char* file_out)
 	return EXIT_SUCCESS;
 }
 
-int slave(int myID, int width, int height, Input in)
+int slave(int rank, int width, int height, Input in)
 {
 	long start_msg[START_LNG];
     MPI_Status status;
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	
-	int nprocs, myid, len, rc = 0;
+	int num_tasks, rank, len, rc = 0;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
 	
 	rc = MPI_Init(&argc,&argv);
@@ -139,8 +139,8 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	
-	MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+	MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Get_processor_name(hostname, &len);
 	
 	Input in;
@@ -153,11 +153,11 @@ int main(int argc, char **argv)
 	int width = floor((in.x_max - in.x_min) / in.rezolutie);
 	int height = floor((in.y_max - in.y_min) / in.rezolutie);
 	
-	if(myid == 0) {
-		rc = master(nprocs - 1, width, height, in, argv[2]);
+	if(rank == 0) {
+		rc = master(num_tasks - 1, width, height, in, argv[2]);
 		//printf("Cred ca a mers \n");
 	} else {
-		rc = slave(myid, width, height, in);
+		rc = slave(rank, width, height, in);
 	}
 	
 	MPI_Finalize();
