@@ -40,7 +40,7 @@ void plot_pgm(char* filename, int width, int height, int **colors)
 	
 	for(i = 0; i < height; ++i) {
 		for(j = 0; j < width; ++j){
-			fprintf(f, "%d ", colors[j][height - i - 1]);
+			fprintf(f, "%d ", colors[height - i - 1][j]);
 		}
 		fprintf(f, "\n");
 	}

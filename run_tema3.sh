@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #Decomment this stuff to run it properly on fep.grid.pub.ro
+#make clean
 #. /usr/share/Modules/init/bash
 #module load libraries/openmpi-1.6-gcc-4.4.6
 

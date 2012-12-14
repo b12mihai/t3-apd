@@ -52,9 +52,7 @@ int master(int nworkers, int width, int height, Input in, char* file_out)
         this_row = data_msg[0];
 
         for (col = 0; col < width; ++col) {
-            //colors[this_row][col] = data_msg[col + 1];
-            colors[col][this_row] = data_msg[col + 1];
-           // printf("%d ", colors[this_row][col]);
+            colors[this_row][col] = data_msg[col + 1];
         }
     }
     
