@@ -1,4 +1,4 @@
-COMPILERFLAGS = -w -g
+COMPILERFLAGS = -Wall
 CC = mpicc
 CFLAGS = $(COMPILERFLAGS)
 LIBS = -lm

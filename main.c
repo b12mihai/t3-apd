@@ -17,7 +17,7 @@ int master(int num_tasks, Input in, char* file_out)
 {
 	MPI_Status status;
 	long *data, start[START_MSG_LEN];
-	int first_row, crt_row, block_size, quota, remaining;
+	int first_row, crt_row, block_size, default_block, remaining;
 	int i, j;
 	int width = floor((in.x_max - in.x_min) / in.rezolutie);
 	int height = floor((in.y_max - in.y_min) / in.rezolutie);
@@ -26,10 +26,10 @@ int master(int num_tasks, Input in, char* file_out)
 	
 	/* Determina liniile pe care le va prelucra fiecare proces slave */
 	first_row = 0;
-    quota = height / num_tasks; /* cate linii are de prelucrat un slave */
+    default_block = height / num_tasks; /* cate linii are de prelucrat un slave */
     remaining = height % num_tasks; /* cate linii mai raman */
     for (i = 0; i < num_tasks; ++i) {
-        block_size = quota;
+        block_size = default_block;
         if (i < remaining)
             ++block_size;
         /* Transmite procesului slave prima linie pe care o are de prelucrat
@@ -72,7 +72,6 @@ int slave(int rank, Input in)
     long *data, start[START_MSG_LEN];
     int first_row, block_size;
    	int width = floor((in.x_max - in.x_min) / in.rezolutie);
-	int height = floor((in.y_max - in.y_min) / in.rezolutie);
 	
     data = malloc((width + 1) * sizeof(long));
     
@@ -86,8 +85,7 @@ int slave(int rank, Input in)
     block_size = start[1];
     
     int i = 0, j = 0, step = 0;
-    complex_t z,c;
-    double u, v;
+    complex_t z, c;
     
     if(in.tip_multime == 0) { /* Mandelbrot set */
     	/* Prelucreaza blocul de linii alocat, conform algoritmului din cerinta*/
@@ -107,6 +105,9 @@ int slave(int rank, Input in)
 			MPI_Send(data, width + 1, MPI_LONG, 0, DATA_TAG, MPI_COMM_WORLD);
 		}		
 	} else if(in.tip_multime == 1) { /* Julia set */
+	   	/* Prelucreaza blocul de linii alocat, conform algoritmului din cerinta
+	   	 * Modul de lucru este identic cu cel de la Mandelbrot
+	   	 */
 		z = new_zero_complex();
 		c = new_complex(in.julia_param1, in.julia_param2);
 		i = j = step = 0;
@@ -152,7 +153,7 @@ int main(int argc, char **argv)
 	Input in;
 	in = parse_input_file(argv[1]);
 	
-	if(in.tip_multime != 0 || in.tip_multime != 1) {
+	if(in.tip_multime != 0 && in.tip_multime != 1) {
 		printf("ERROR: Set not implemented or error parsing input file\n");
 		MPI_Abort(MPI_COMM_WORLD, 911);
 		exit(EXIT_FAILURE);
