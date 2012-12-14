@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util.h"
+
 /* Functii utile pentru lucrul cu numere complexe */
 
 typedef struct _complex_t {
@@ -24,3 +26,13 @@ complex_t mult(complex_t z, complex_t w);
 
 /* Intoarce modulul unui numar complex */
 double modul(complex_t z);
+
+/* Calculeaza multimea Mandelbrot a punctului aflat 
+ * la coordonatele (row, col)
+ */
+int compute_Mandelbrot(Input in, int row, int col);
+
+/* Calculeaza multimea Julia a punctului aflat 
+ * la coordonatele (row, col)
+ */
+int compute_Julia(Input in, int row, int col);
