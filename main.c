@@ -8,112 +8,120 @@
 #include "complex.h"
 #include "util.h"
 
-/* Constants for message-passing */
-#define START_TAG   1           /* "start" message (master to worker) */
-#define DATA_TAG    2           /* "data" message (worker to master) */
-#define START_LNG   2
+/* Constants for MPI */
+#define START_TAG   1           /* master to slave - start work */
+#define DATA_TAG    2           /* slave to master - send data */
+#define START_MSG_LEN   2
 
-int master(int nworkers, int width, int height, Input in, char* file_out)
+int master(int num_tasks, Input in, char* file_out)
 {
 	MPI_Status status;
-	long *data_msg, start_msg[START_LNG];
-	int first_row, this_row, rows, rows_per_worker_quot, rows_per_worker_rem;
-	int p;
+	long *data, start[START_MSG_LEN];
+	int first_row, crt_row, block_size, quota, remaining;
+	int i, j;
+	int width = floor((in.x_max - in.x_min) / in.rezolutie);
+	int height = floor((in.y_max - in.y_min) / in.rezolutie);
 	
-	data_msg = malloc((width + 1) * sizeof(long));
+	data = malloc((width + 1) * sizeof(long));
 	
-	/* Calculate which rows each worker should work on. */
-    first_row = 0;
-    rows_per_worker_quot = height / nworkers;
-    rows_per_worker_rem = height % nworkers;
-    for (p = 0; p < nworkers; ++p) {
-        rows = rows_per_worker_quot;
-        if (p < rows_per_worker_rem)
-            ++rows;
-        start_msg[0] = first_row;
-        start_msg[1] = rows;
-        MPI_Send(start_msg, START_LNG, MPI_LONG, p+1,
+	/* Determina liniile pe care le va prelucra fiecare proces slave */
+	first_row = 0;
+    quota = height / num_tasks; /* cate linii are de prelucrat un slave */
+    remaining = height % num_tasks; /* cate linii mai raman */
+    for (i = 0; i < num_tasks; ++i) {
+        block_size = quota;
+        if (i < remaining)
+            ++block_size;
+        /* Transmite procesului slave prima linie pe care o are de prelucrat
+         * impreuna cu numarul de linii 
+         */    
+        start[0] = first_row;
+        start[1] = block_size;
+        /* Anunta procesul slave ca are de lucru! */
+        MPI_Send(start, START_MSG_LEN, MPI_LONG, i + 1,
                 START_TAG, MPI_COMM_WORLD);
-        first_row += rows;
+        first_row += block_size;
     }
-    
-    /* Receive results from workers and draw points */
-    int row, col;
+
+	/* Matricea de pixeli 0 - 255 */    
     int **colors;
    	colors = malloc(height * sizeof(int*));
-	for(row = 0; row < height; ++row)
-		colors[row] = malloc(width * sizeof(int));
-    
-    for (row = 0; row < height; ++row) {
+	for(i = 0; i < height; ++i)
+		colors[i] = malloc(width * sizeof(int));
 
-        MPI_Recv(data_msg, width+1, MPI_LONG, MPI_ANY_SOURCE,
+    /* Primeste rezultate de la "sclavi" si salveaza in matricea de culori */    
+    for (i = 0; i < height; ++i) {
+        MPI_Recv(data, width + 1, MPI_LONG, MPI_ANY_SOURCE,
                 DATA_TAG, MPI_COMM_WORLD, &status);
-
-        this_row = data_msg[0];
-
-        for (col = 0; col < width; ++col) {
-            colors[this_row][col] = data_msg[col + 1];
+        /* Fiecare slave ii spune master-ului datele carei linii le-a trimis */
+        crt_row = data[0];
+        for (j = 0; j < width; ++j) {
+            colors[crt_row][j] = data[j + 1];
         }
     }
     
+    /* Creeaza imaginea */
     plot_pgm(file_out, width, height, colors);
 
 	return EXIT_SUCCESS;
 }
 
-int slave(int rank, int width, int height, Input in)
+int slave(int rank, Input in)
 {
-	long start_msg[START_LNG];
     MPI_Status status;
-    int first_row, rows;
-    long *data_msg;
-    data_msg = malloc((width + 1) * sizeof(long));
+    long *data, start[START_MSG_LEN];
+    int first_row, block_size;
+   	int width = floor((in.x_max - in.x_min) / in.rezolutie);
+	int height = floor((in.y_max - in.y_min) / in.rezolutie);
+	
+    data = malloc((width + 1) * sizeof(long));
     
-    /* Receive "start" message and extract data */
-    MPI_Recv(start_msg, START_LNG, MPI_LONG, 0, START_TAG,
+    /* Primeste anuntul de START si obtine cantitatea de lucru:
+     * first_row = linia de start 
+     * block_size = cate linii prelucrez (deplasament)
+     */ 
+    MPI_Recv(start, START_MSG_LEN, MPI_LONG, 0, START_TAG,
             MPI_COMM_WORLD, &status);
-    first_row = start_msg[0];
-    rows = start_msg[1];
+    first_row = start[0];
+    block_size = start[1];
     
-    int row, col, step = 0;
+    int i = 0, j = 0, step = 0;
     complex_t z,c;
-    double u,v;
+    double u, v;
     
-    if(in.tip_multime == 0) { // Mandelbrot set   
-		for(row = first_row; row < (first_row + rows); ++row) {
-			data_msg[0] = row;
-			for(col = 0; col < width; ++col) {
+    if(in.tip_multime == 0) { /* Mandelbrot set */
+    	/* Prelucreaza blocul de linii alocat, conform algoritmului din cerinta*/
+		for(i = first_row; i < (first_row + block_size); ++i) {
+			data[0] = i; /* Pentru ca masterul sa stie ca linie a prelucrat acest slave */
+			for(j = 0; j < width; ++j) {
 				z = new_zero_complex();
 				step = 0;
-				u = in.x_min + col * in.rezolutie;
-				v = in.y_min + row * in.rezolutie;
-				c = new_complex(u,v);
+				c = new_complex(in.x_min + j * in.rezolutie, in.y_min + i * in.rezolutie);
 				while(modul(z) < 2 && step < in.max_steps) {			
 					z = add(mult(z, z), c);
 					step++;
 				}
-				data_msg[col + 1] = step % NUM_COLORS;
+				data[j + 1] = step % NUM_COLORS;
 			}
-			MPI_Send(data_msg, width+1, MPI_LONG, 0, DATA_TAG, MPI_COMM_WORLD);
-		}
-	} else if(in.tip_multime == 1) { //Julia
+			/* Trimite rezultatele liniei curente master-ului */
+			MPI_Send(data, width + 1, MPI_LONG, 0, DATA_TAG, MPI_COMM_WORLD);
+		}		
+	} else if(in.tip_multime == 1) { /* Julia set */
 		z = new_zero_complex();
 		c = new_complex(in.julia_param1, in.julia_param2);
-		row = col = step = 0;
-		for(row = first_row; row < (first_row + rows); ++row) {
-			data_msg[0] = row;
-			for(col = 0; col < width; ++col) {
+		i = j = step = 0;
+		for(i = first_row; i < (first_row + block_size); ++i) {
+			data[0] = i;
+			for(j = 0; j < width; ++j) {
 				step = 0;
-				u = in.x_min + col * in.rezolutie;
-				v = in.y_min + row * in.rezolutie;
-				z = new_complex(u,v);
+				z = new_complex(in.x_min + j * in.rezolutie, in.y_min + i * in.rezolutie);
 				while(modul(z) < 2 && step < in.max_steps) {			
 					z = add(mult(z, z), c);
 					step++;
 				}
-				data_msg[col + 1] = step % NUM_COLORS;
+				data[j + 1] = step % NUM_COLORS;
 			}
-			MPI_Send(data_msg, width+1, MPI_LONG, 0, DATA_TAG, MPI_COMM_WORLD);
+			MPI_Send(data, width + 1, MPI_LONG, 0, DATA_TAG, MPI_COMM_WORLD);
 		}
 	}
     
@@ -144,18 +152,16 @@ int main(int argc, char **argv)
 	Input in;
 	in = parse_input_file(argv[1]);
 	
-	if(in.tip_multime == -1) {
+	if(in.tip_multime != 0 || in.tip_multime != 1) {
+		printf("ERROR: Set not implemented or error parsing input file\n");
+		MPI_Abort(MPI_COMM_WORLD, 911);
 		exit(EXIT_FAILURE);
 	}
 	
-	int width = floor((in.x_max - in.x_min) / in.rezolutie);
-	int height = floor((in.y_max - in.y_min) / in.rezolutie);
-	
 	if(rank == 0) {
-		rc = master(num_tasks - 1, width, height, in, argv[2]);
-		//printf("Cred ca a mers \n");
+		rc = master(num_tasks - 1, in, argv[2]);
 	} else {
-		rc = slave(rank, width, height, in);
+		rc = slave(rank, in);
 	}
 	
 	MPI_Finalize();

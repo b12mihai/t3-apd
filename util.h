@@ -2,6 +2,7 @@
 
 #define NUM_COLORS 256
 
+/* Date din fisierul de intrare */
 typedef struct _input {
 	int tip_multime;
 	double x_min;
@@ -14,5 +15,8 @@ typedef struct _input {
 	double julia_param2;
 } Input;
 
+/* Salveaza datele din fisierul de intrare */
 Input parse_input_file(char* filename);
+
+/* Scrie imaginea PGM */
 void plot_pgm(char* filename, int width, int height, int **colors);
