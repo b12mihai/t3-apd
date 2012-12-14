@@ -14,4 +14,4 @@ clean:
 
 .PHONY: archive
 archive:
-	zip 331CA_BarbulescuMihai_Tema3APD.zip *.c *.h *.sh Makefile README	test/*
+	zip 331CA_BarbulescuMihai_Tema3APD.zip *.c *.h *.sh Makefile readme.txt	test/*

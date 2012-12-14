@@ -101,7 +101,7 @@ int slave(int rank)
     in.y_min = start[5];
     in.y_max = start[6];
     in.rezolutie = start[7]; 
-    in.max_steps = start[8];
+    in.max_steps = (int)start[8];
     in.julia_param1 = start[9];
     in.julia_param2 = start[10];
    	int width = floor((in.x_max - in.x_min) / in.rezolutie);
