@@ -2,8 +2,8 @@
 
 #Decomment this stuff to run it properly on fep.grid.pub.ro
 #make clean
-#. /usr/share/Modules/init/bash
-#module load libraries/openmpi-1.6-gcc-4.4.6
+. /usr/share/Modules/init/bash
+module load libraries/openmpi-1.6-gcc-4.4.6
 
 EXPECTED_ARGS=1
 E_BADARGS=65
@@ -16,7 +16,7 @@ then
   exit $E_BADARGS
 fi
 
-make
+#make
 exec=tema3
 num_procs=$1
 
