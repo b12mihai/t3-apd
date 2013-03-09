@@ -33,7 +33,7 @@ Detalii de implementare
 ---------------------
 
 Am impartit datele de prelucrat in fragmente aproximativ egale, astfel "sclavul"
-cu rank-ul i primeste un numar de linii egal cu height / numar_taskuri.
+cu rank-ul i primeste un numar de linii egal cu height / numtasks.
 
 La pornire master-ul trimite slave-ului linia cu care incepe prelucarea + 
 numarul de linii si datele din fisierul de intrare fara de care nu poate
@@ -50,3 +50,9 @@ Pentru precizie am lucrat cu double si am renuntat la a pune
 vreun flag de optimizare la compilare.
 
 Tema a fost testata atat pe fep cat si pe masina locala: Ubuntu 12.04, 64bit 
+
+Known bugs
+---------------
+
+Tema nu ruleaza corect pentru un singur proces/procesor (numprocs != 1)
+
